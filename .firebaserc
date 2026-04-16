@@ -1,0 +1,10 @@
+{
+  "projects": {
+    "default": "raktsetu-dev",
+    "dev": "raktsetu-dev",
+    "staging": "raktsetu-staging",
+    "production": "raktsetu-prod"
+  },
+  "targets": {},
+  "etags": {}
+}

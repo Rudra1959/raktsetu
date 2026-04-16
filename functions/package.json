@@ -1,0 +1,31 @@
+{
+  "name": "raktsetu-functions",
+  "description": "RaktSetu Cloud Functions — Serverless backend for blood matching, notifications, and AI",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "@google-cloud/vertexai": "^1.4.0",
+    "@google-cloud/tasks": "^5.2.0",
+    "@google-cloud/pubsub": "^4.4.0",
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.3.0"
+  }
+}

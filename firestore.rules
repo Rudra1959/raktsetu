@@ -1,0 +1,102 @@
+// ===========================
+// RaktSetu — Firestore Security Rules
+// Role-based access control at the database layer
+// ===========================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ──
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return request.auth.token.role == role;
+    }
+
+    function isHospitalAdmin() {
+      return hasRole('hospital_admin');
+    }
+
+    // ── Users Collection ──
+    // Any authenticated user can read profiles (for donor discovery)
+    // Users can only write their own profile
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // ── Blood Requests Collection ──
+    // Any authenticated user can create a request
+    // Any authenticated user can read requests (for matching)
+    // Only requester, matched donor, or hospital admin can update
+    match /requests/{requestId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.requesterId
+        || request.auth.uid == resource.data.matchedDonorId
+        || isHospitalAdmin()
+      );
+      allow delete: if isHospitalAdmin();
+    }
+
+    // ── Blood Banks Collection ──
+    // Public read (anyone can view blood bank info)
+    // Only hospital admins can modify inventory
+    match /bloodBanks/{bankId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isHospitalAdmin();
+    }
+
+    // ── Blood Camps Collection ──
+    // Any authenticated user can read camps
+    // Only the organizer can modify their camp
+    match /camps/{campId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.organizerId
+        || isHospitalAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.organizerId
+      );
+    }
+
+    // ── Notifications Collection ──
+    // Users can only read/update their own notifications
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated()
+        && request.auth.uid == resource.data.userId;
+      allow update: if isAuthenticated()
+        && request.auth.uid == resource.data.userId;
+      // Only Cloud Functions create notifications (admin SDK bypasses rules)
+      allow create: if false;
+      allow delete: if false;
+    }
+
+    // ── Forecasts Collection (AI Predictions) ──
+    // Read-only for authenticated users
+    // Only Cloud Functions write (admin SDK)
+    match /forecasts/{forecastId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // ── Leaderboard Collection ──
+    // Public read for gamification
+    match /leaderboard/{entryId} {
+      allow read: if true;
+      allow write: if false; // Only Cloud Functions
+    }
+  }
+}
