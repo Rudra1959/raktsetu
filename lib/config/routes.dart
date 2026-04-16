@@ -18,6 +18,7 @@ import '../screens/camps/create_camp_screen.dart';
 import '../screens/analytics/dashboard_screen.dart';
 import '../screens/chatbot/eligibility_chat_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/landing/landing_screen.dart';
 
 /// Centralized route definitions for RaktSetu.
 class AppRoutes {
@@ -26,6 +27,7 @@ class AppRoutes {
   // ── Route Names ──
   static const String splash = '/';
   static const String onboarding = '/onboarding';
+  static const String landing = '/landing';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
@@ -65,5 +67,6 @@ class AppRoutes {
     analytics: (_) => const DashboardScreen(),
     eligibilityChat: (_) => const EligibilityChatScreen(),
     settings: (_) => const SettingsScreen(),
+    landing: (_) => const LandingScreen(),
   };
 }
