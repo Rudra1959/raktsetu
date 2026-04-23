@@ -42,7 +42,7 @@ class Validators {
     final hb = double.tryParse(value);
     if (hb == null) return 'Enter a valid number';
     final min = isMale ? 13.0 : 12.5;
-    if (hb < min) return 'Minimum ${min} g/dL required';
+    if (hb < min) return 'Minimum $min g/dL required';
     return null;
   }
 

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 
@@ -11,31 +11,32 @@ class RaktSetuAuthProvider extends ChangeNotifier {
   User? _firebaseUser;
   UserModel? _userProfile;
   bool _isLoading = false;
+  bool _isInitialized = false;
   String? _error;
 
-  // ── Getters ──
   User? get firebaseUser => _firebaseUser;
   UserModel? get userProfile => _userProfile;
   bool get isLoading => _isLoading;
+  bool get isInitialized => _isInitialized;
   String? get error => _error;
   bool get isSignedIn => _firebaseUser != null;
+  bool get canUseGoogleSignInOnWeb => _authService.canUseGoogleSignInOnWeb;
   bool get isProfileComplete =>
-      _userProfile != null && _userProfile!.bloodGroup.isNotEmpty;
+      _userProfile != null && _userProfile!.profileCompleted;
 
   RaktSetuAuthProvider() {
-    // Listen to auth state changes
-    _authService.authStateChanges.listen((user) {
+    _authService.authStateChanges.listen((user) async {
       _firebaseUser = user;
       if (user != null) {
-        _loadProfile();
+        await _loadProfile();
       } else {
         _userProfile = null;
       }
+      _isInitialized = true;
       notifyListeners();
     });
   }
 
-  /// Load user profile from Firestore.
   Future<void> _loadProfile() async {
     try {
       _userProfile = await _authService.getUserProfile();
@@ -46,7 +47,6 @@ class RaktSetuAuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Sign in with Google.
   Future<bool> signInWithGoogle() async {
     _isLoading = true;
     _error = null;
@@ -54,6 +54,7 @@ class RaktSetuAuthProvider extends ChangeNotifier {
 
     try {
       final credential = await _authService.signInWithGoogle();
+      await _loadProfile();
       _isLoading = false;
       notifyListeners();
       return credential != null;
@@ -65,7 +66,36 @@ class RaktSetuAuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Sign out.
+
+  Future<bool> completeProfile({
+    required String name,
+    required String role,
+    required String bloodGroup,
+    String? city,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authService.completeProfile(
+        name: name,
+        role: role,
+        bloodGroup: bloodGroup,
+        city: city,
+      );
+      await _loadProfile();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to save profile: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> signOut() async {
     await _authService.signOut();
     _firebaseUser = null;
@@ -73,12 +103,10 @@ class RaktSetuAuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Refresh user profile from Firestore.
   Future<void> refreshProfile() async {
     await _loadProfile();
   }
 
-  /// Clear error.
   void clearError() {
     _error = null;
     notifyListeners();

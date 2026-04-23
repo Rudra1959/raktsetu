@@ -26,17 +26,19 @@ class NotificationModel {
   });
 
   factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = (doc.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
     return NotificationModel(
       id: doc.id,
-      userId: data['userId'] ?? '',
-      type: data['type'] ?? 'broadcast',
-      channels: List<String>.from(data['channel'] ?? ['fcm']),
+      userId: data['userId'] as String? ?? '',
+      type: data['type'] as String? ?? 'broadcast',
+      channels: List<String>.from((data['channel'] as List<dynamic>?) ?? const ['fcm']),
       sentAt: (data['sentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      read: data['read'] ?? false,
-      title: data['title'],
-      body: data['body'],
-      payload: Map<String, dynamic>.from(data['payload'] ?? {}),
+      read: data['read'] as bool? ?? false,
+      title: data['title'] as String?,
+      body: data['body'] as String?,
+      payload: Map<String, dynamic>.from(
+        (data['payload'] as Map<dynamic, dynamic>?) ?? const <dynamic, dynamic>{},
+      ),
     );
   }
 

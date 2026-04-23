@@ -24,9 +24,9 @@ class BloodGroupChip extends StatelessWidget {
         vertical: large ? 8 : 4,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(large ? 12 : 8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         bloodGroup,

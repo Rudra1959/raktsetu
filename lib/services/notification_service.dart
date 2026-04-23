@@ -116,7 +116,7 @@ class NotificationService {
           priority: isEmergency ? Priority.max : Priority.high,
         ),
       ),
-      payload: message.data['requestId'],
+      payload: message.data['requestId'] as String?,
     );
   }
 

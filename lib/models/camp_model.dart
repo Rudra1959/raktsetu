@@ -32,20 +32,20 @@ class CampModel {
   });
 
   factory CampModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = (doc.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
     return CampModel(
       id: doc.id,
-      organizerId: data['organizerId'] ?? '',
-      title: data['title'] ?? '',
+      organizerId: data['organizerId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
       date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
       location: data['location'] as GeoPoint?,
-      address: data['address'] ?? '',
-      targetUnits: data['targetUnits'] ?? 0,
-      collectedUnits: data['collectedUnits'] ?? 0,
-      rsvpCount: data['rsvpCount'] ?? 0,
-      status: data['status'] ?? 'upcoming',
-      description: data['description'],
-      imageUrl: data['imageUrl'],
+      address: data['address'] as String? ?? '',
+      targetUnits: (data['targetUnits'] as num?)?.toInt() ?? 0,
+      collectedUnits: (data['collectedUnits'] as num?)?.toInt() ?? 0,
+      rsvpCount: (data['rsvpCount'] as num?)?.toInt() ?? 0,
+      status: data['status'] as String? ?? 'upcoming',
+      description: data['description'] as String?,
+      imageUrl: data['imageUrl'] as String?,
     );
   }
 

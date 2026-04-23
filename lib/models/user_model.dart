@@ -7,14 +7,14 @@ class UserModel {
   final String name;
   final String phone;
   final String email;
-  final String role; // 'donor' | 'patient' | 'hospital_admin'
+  final String role;
   final String bloodGroup;
   final String rhFactor;
   final GeoPoint? location;
   final String? city;
   final String? state;
   final bool isAvailable;
-  final String availabilityMode; // 'on_duty' | 'off_duty' | 'traveling'
+  final String availabilityMode;
   final DateTime? lastDonated;
   final int totalDonations;
   final List<String> badges;
@@ -25,6 +25,7 @@ class UserModel {
   final double? hemoglobinLevel;
   final List<String>? medicalConditions;
   final List<String>? medications;
+  final bool profileCompleted;
   final DateTime createdAt;
 
   const UserModel({
@@ -44,50 +45,50 @@ class UserModel {
     this.totalDonations = 0,
     this.badges = const [],
     this.healthScore = 100,
-    this.preferredRadiusKm = 10.0,
+    this.preferredRadiusKm = 10,
     this.anonymousDonation = false,
     this.profilePhotoUrl,
     this.hemoglobinLevel,
     this.medicalConditions,
     this.medications,
+    this.profileCompleted = false,
     required this.createdAt,
   });
 
-  /// Create UserModel from Firestore document snapshot.
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = (doc.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
     return UserModel(
       uid: doc.id,
-      name: data['name'] ?? '',
-      phone: data['phone'] ?? '',
-      email: data['email'] ?? '',
-      role: data['role'] ?? 'patient',
-      bloodGroup: data['bloodGroup'] ?? 'O+',
-      rhFactor: data['rhFactor'] ?? '+',
+      name: data['name'] as String? ?? '',
+      phone: data['phone'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      role: data['role'] as String? ?? 'patient',
+      bloodGroup: data['bloodGroup'] as String? ?? 'O+',
+      rhFactor: data['rhFactor'] as String? ?? '+',
       location: data['location'] as GeoPoint?,
-      city: data['city'],
-      state: data['state'],
-      isAvailable: data['isAvailable'] ?? true,
-      availabilityMode: data['availabilityMode'] ?? 'on_duty',
+      city: data['city'] as String?,
+      state: data['state'] as String?,
+      isAvailable: data['isAvailable'] as bool? ?? true,
+      availabilityMode: data['availabilityMode'] as String? ?? 'on_duty',
       lastDonated: (data['lastDonated'] as Timestamp?)?.toDate(),
-      totalDonations: data['totalDonations'] ?? 0,
-      badges: List<String>.from(data['badges'] ?? []),
-      healthScore: data['healthScore'] ?? 100,
-      preferredRadiusKm: (data['preferredRadiusKm'] ?? 10.0).toDouble(),
-      anonymousDonation: data['anonymousDonation'] ?? false,
-      profilePhotoUrl: data['profilePhotoUrl'],
+      totalDonations: (data['totalDonations'] as num?)?.toInt() ?? 0,
+      badges: List<String>.from((data['badges'] as List<dynamic>?) ?? const <dynamic>[]),
+      healthScore: (data['healthScore'] as num?)?.toInt() ?? 100,
+      preferredRadiusKm: (data['preferredRadiusKm'] as num?)?.toDouble() ?? 10,
+      anonymousDonation: data['anonymousDonation'] as bool? ?? false,
+      profilePhotoUrl: data['profilePhotoUrl'] as String?,
       hemoglobinLevel: (data['hemoglobinLevel'] as num?)?.toDouble(),
       medicalConditions: data['medicalConditions'] != null
-          ? List<String>.from(data['medicalConditions'])
+          ? List<String>.from(data['medicalConditions'] as List<dynamic>)
           : null,
       medications: data['medications'] != null
-          ? List<String>.from(data['medications'])
+          ? List<String>.from(data['medications'] as List<dynamic>)
           : null,
+      profileCompleted: data['profileCompleted'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  /// Convert UserModel to Firestore-compatible map.
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
@@ -111,25 +112,23 @@ class UserModel {
       'hemoglobinLevel': hemoglobinLevel,
       'medicalConditions': medicalConditions,
       'medications': medications,
+      'profileCompleted': profileCompleted,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 
-  /// Whether the donor can donate (56-day cooldown check).
   bool get canDonate {
     if (lastDonated == null) return true;
     final daysSince = DateTime.now().difference(lastDonated!).inDays;
     return daysSince >= 56;
   }
 
-  /// Days until next eligible donation.
   int get daysUntilEligible {
     if (lastDonated == null) return 0;
     final daysSince = DateTime.now().difference(lastDonated!).inDays;
     return (56 - daysSince).clamp(0, 56);
   }
 
-  /// Display name (respects anonymous setting).
   String get displayName => anonymousDonation ? 'Anonymous Donor' : name;
 
   UserModel copyWith({
@@ -150,6 +149,7 @@ class UserModel {
     bool? anonymousDonation,
     String? profilePhotoUrl,
     double? hemoglobinLevel,
+    bool? profileCompleted,
   }) {
     return UserModel(
       uid: uid,
@@ -173,6 +173,7 @@ class UserModel {
       hemoglobinLevel: hemoglobinLevel ?? this.hemoglobinLevel,
       medicalConditions: medicalConditions,
       medications: medications,
+      profileCompleted: profileCompleted ?? this.profileCompleted,
       createdAt: createdAt,
     );
   }

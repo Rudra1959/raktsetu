@@ -40,7 +40,7 @@ class RequestCard extends StatelessWidget {
                   Expanded(
                     child: Text(patientName, style: GoogleFonts.inter(
                       fontSize: 16, fontWeight: FontWeight.w600,
-                    )),
+                    ),),
                   ),
                   UrgencyBadge(score: urgencyScore),
                 ],
@@ -51,14 +51,14 @@ class RequestCard extends StatelessWidget {
                   BloodGroupChip(bloodGroup: bloodGroup),
                   const SizedBox(width: 8),
                   Text('$units unit${units > 1 ? 's' : ''}',
-                      style: TextStyle(color: Colors.grey.shade600)),
+                      style: TextStyle(color: Colors.grey.shade600),),
                   const Spacer(),
                   Icon(Icons.local_hospital, size: 16,
-                      color: Colors.grey.shade400),
+                      color: Colors.grey.shade400,),
                   const SizedBox(width: 4),
                   Text(hospital, style: TextStyle(
                     fontSize: 13, color: Colors.grey.shade600,
-                  )),
+                  ),),
                 ],
               ),
             ],

@@ -31,12 +31,12 @@ class EmptyState extends StatelessWidget {
             Text(title, style: GoogleFonts.inter(
               fontSize: 18, fontWeight: FontWeight.w600,
               color: Colors.grey.shade600,
-            ), textAlign: TextAlign.center),
+            ), textAlign: TextAlign.center,),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!, style: TextStyle(
                 fontSize: 14, color: Colors.grey.shade500,
-              ), textAlign: TextAlign.center),
+              ), textAlign: TextAlign.center,),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),

@@ -6,16 +6,6 @@
  */
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { VertexAI } = require('@google-cloud/vertexai');
-
-const vertexAI = new VertexAI({
-  project: process.env.GCP_PROJECT || 'raktsetu-prod',
-  location: process.env.GCP_REGION || 'asia-south1',
-});
-
-const model = vertexAI.getGenerativeModel({
-  model: 'gemini-2.0-flash-exp',
-});
 
 const SYSTEM_INSTRUCTION =
   'You are a blood donation eligibility assistant for India. ' +
@@ -27,6 +17,25 @@ const SYSTEM_INSTRUCTION =
   'no recent surgery (6 months), no tattoo (12 months), ' +
   '56-day gap between whole blood donations. ' +
   'Always recommend consulting a doctor for specific medical conditions.';
+
+let cachedModel;
+
+function getModel() {
+  if (cachedModel) {
+    return cachedModel;
+  }
+
+  const { VertexAI } = require('@google-cloud/vertexai');
+  const vertexAI = new VertexAI({
+    project: process.env.GCP_PROJECT || 'raktsetu-prod',
+    location: process.env.GCP_REGION || 'asia-south1',
+  });
+
+  cachedModel = vertexAI.getGenerativeModel({
+    model: 'gemini-2.0-flash-exp',
+  });
+  return cachedModel;
+}
 
 const donorEligibilityChat = onCall(
   {
@@ -46,6 +55,7 @@ const donorEligibilityChat = onCall(
     }
 
     try {
+      const model = getModel();
       const result = await model.generateContent({
         contents: [
           {

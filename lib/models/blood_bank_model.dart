@@ -26,17 +26,19 @@ class BloodBankModel {
   });
 
   factory BloodBankModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = (doc.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
     return BloodBankModel(
       id: doc.id,
-      name: data['name'] ?? '',
-      license: data['license'] ?? '',
+      name: data['name'] as String? ?? '',
+      license: data['license'] as String? ?? '',
       location: data['location'] as GeoPoint?,
-      phone: data['phone'] ?? '',
-      address: data['address'],
-      inventory: Map<String, int>.from(data['inventory'] ?? {}),
+      phone: data['phone'] as String? ?? '',
+      address: data['address'] as String?,
+      inventory: Map<String, int>.from(
+        (data['inventory'] as Map<dynamic, dynamic>?) ?? const <dynamic, dynamic>{},
+      ),
       lastUpdated: (data['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      isVerified: data['isVerified'] ?? false,
+      isVerified: data['isVerified'] as bool? ?? false,
     );
   }
 
@@ -54,7 +56,7 @@ class BloodBankModel {
   }
 
   /// Total units of all blood types in stock.
-  int get totalUnits => inventory.values.fold(0, (sum, count) => sum + count);
+  int get totalUnits => inventory.values.fold<int>(0, (total, units) => total + units);
 
   /// Whether a specific blood group is available.
   bool hasBloodGroup(String group) => (inventory[group] ?? 0) > 0;

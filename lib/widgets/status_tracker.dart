@@ -45,10 +45,10 @@ class StatusTracker extends StatelessWidget {
                     boxShadow: isCurrent
                         ? [
                             BoxShadow(
-                              color: RaktSetuTheme.primaryRed.withOpacity(0.3),
+                              color: RaktSetuTheme.primaryRed.withValues(alpha: 0.3),
                               blurRadius: 8,
                               spreadRadius: 2,
-                            )
+                            ),
                           ]
                         : null,
                   ),

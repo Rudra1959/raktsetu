@@ -28,18 +28,31 @@ class MapsService {
     final response = await http.get(url);
     if (response.statusCode != 200) return null;
 
-    final data = json.decode(response.body);
-    if (data['status'] != 'OK' || (data['routes'] as List).isEmpty) return null;
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    final routes = data['routes'] as List<dynamic>? ?? const <dynamic>[];
+    if (data['status'] != 'OK' || routes.isEmpty) return null;
 
-    final route = data['routes'][0];
-    final leg = route['legs'][0];
+    final route = routes.first as Map<String, dynamic>;
+    final legs = route['legs'] as List<dynamic>? ?? const <dynamic>[];
+    if (legs.isEmpty) return null;
+    final leg = legs.first as Map<String, dynamic>;
+    final distance = leg['distance'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final duration = leg['duration'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final durationInTraffic =
+        leg['duration_in_traffic'] as Map<String, dynamic>?;
+    final overviewPolyline =
+        route['overview_polyline'] as Map<String, dynamic>? ?? const <String, dynamic>{};
 
     return DirectionsResult(
-      distanceText: leg['distance']['text'],
-      distanceMeters: leg['distance']['value'],
-      durationText: leg['duration_in_traffic']?['text'] ?? leg['duration']['text'],
-      durationSeconds: leg['duration_in_traffic']?['value'] ?? leg['duration']['value'],
-      encodedPolyline: route['overview_polyline']['points'],
+      distanceText: distance['text'] as String? ?? '',
+      distanceMeters: (distance['value'] as num?)?.toInt() ?? 0,
+      durationText:
+          durationInTraffic?['text'] as String? ?? duration['text'] as String? ?? '',
+      durationSeconds:
+          (durationInTraffic?['value'] as num?)?.toInt() ??
+          (duration['value'] as num?)?.toInt() ??
+          0,
+      encodedPolyline: overviewPolyline['points'] as String? ?? '',
     );
   }
 
@@ -55,11 +68,18 @@ class MapsService {
     final response = await http.get(url);
     if (response.statusCode != 200) return null;
 
-    final data = json.decode(response.body);
-    if (data['status'] != 'OK' || (data['results'] as List).isEmpty) return null;
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    final results = data['results'] as List<dynamic>? ?? const <dynamic>[];
+    if (data['status'] != 'OK' || results.isEmpty) return null;
 
-    final location = data['results'][0]['geometry']['location'];
-    return GeoPoint(location['lat'], location['lng']);
+    final result = results.first as Map<String, dynamic>;
+    final geometry = result['geometry'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final location =
+        geometry['location'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    return GeoPoint(
+      (location['lat'] as num?)?.toDouble() ?? 0,
+      (location['lng'] as num?)?.toDouble() ?? 0,
+    );
   }
 
   /// Get distance matrix for batch distance computation.
@@ -83,21 +103,28 @@ class MapsService {
     final response = await http.get(url);
     if (response.statusCode != 200) return [];
 
-    final data = json.decode(response.body);
+    final data = json.decode(response.body) as Map<String, dynamic>;
     if (data['status'] != 'OK') return [];
 
-    final elements = data['rows'][0]['elements'] as List;
+    final rows = data['rows'] as List<dynamic>? ?? const <dynamic>[];
+    if (rows.isEmpty) return [];
+    final row = rows.first as Map<String, dynamic>;
+    final elements = row['elements'] as List<dynamic>? ?? const <dynamic>[];
     return elements.asMap().entries.map((entry) {
-      final element = entry.value;
+      final element = entry.value as Map<String, dynamic>;
       if (element['status'] != 'OK') {
         return DistanceEntry(index: entry.key, distanceMeters: -1, durationSeconds: -1);
       }
+      final distance =
+          element['distance'] as Map<String, dynamic>? ?? const <String, dynamic>{};
+      final duration =
+          element['duration'] as Map<String, dynamic>? ?? const <String, dynamic>{};
       return DistanceEntry(
         index: entry.key,
-        distanceMeters: element['distance']['value'],
-        durationSeconds: element['duration']['value'],
-        distanceText: element['distance']['text'],
-        durationText: element['duration']['text'],
+        distanceMeters: (distance['value'] as num?)?.toInt() ?? -1,
+        durationSeconds: (duration['value'] as num?)?.toInt() ?? -1,
+        distanceText: distance['text'] as String?,
+        durationText: duration['text'] as String?,
       );
     }).toList();
   }

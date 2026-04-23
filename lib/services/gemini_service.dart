@@ -38,8 +38,10 @@ class GeminiService {
       throw Exception('Chatbot error: ${response.statusCode}');
     }
 
-    final data = json.decode(response.body);
-    return data['result']['reply'] ?? 'Sorry, I could not process your question.';
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    final result = data['result'] as Map<String, dynamic>?;
+    return result?['reply'] as String? ??
+        'Sorry, I could not process your question.';
   }
 
   /// Get demand forecast summary for a city.
@@ -62,7 +64,7 @@ class GeminiService {
 
     if (response.statusCode != 200) return null;
 
-    final data = json.decode(response.body);
+    final data = json.decode(response.body) as Map<String, dynamic>;
     return data['result'] as Map<String, dynamic>?;
   }
 

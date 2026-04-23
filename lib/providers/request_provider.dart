@@ -10,11 +10,10 @@ class RequestProvider extends ChangeNotifier {
 
   List<RequestModel> _userRequests = [];
   RequestModel? _activeRequest;
-  StreamSubscription? _activeRequestSub;
+  StreamSubscription<RequestModel?>? _activeRequestSub;
   bool _isLoading = false;
   String? _error;
 
-  // ── Getters ──
   List<RequestModel> get userRequests => _userRequests;
   RequestModel? get activeRequest => _activeRequest;
   bool get isLoading => _isLoading;
@@ -22,7 +21,6 @@ class RequestProvider extends ChangeNotifier {
   bool get hasActiveRequest =>
       _activeRequest != null && _activeRequest!.isActive;
 
-  /// Load all requests for the current user.
   Future<void> loadUserRequests(String userId) async {
     _isLoading = true;
     notifyListeners();
@@ -38,7 +36,6 @@ class RequestProvider extends ChangeNotifier {
     }
   }
 
-  /// Create a new blood request and start watching it.
   Future<String?> createRequest(RequestModel request) async {
     _isLoading = true;
     _error = null;
@@ -47,10 +44,7 @@ class RequestProvider extends ChangeNotifier {
     try {
       final docRef = await _firestoreService.createRequest(request);
       _isLoading = false;
-
-      // Start real-time tracking
       watchRequest(docRef.id);
-
       notifyListeners();
       return docRef.id;
     } catch (e) {
@@ -61,25 +55,21 @@ class RequestProvider extends ChangeNotifier {
     }
   }
 
-  /// Watch a request in real-time.
   void watchRequest(String requestId) {
     _activeRequestSub?.cancel();
-    _activeRequestSub = _firestoreService
-        .streamRequest(requestId)
-        .listen((request) {
+    _activeRequestSub =
+        _firestoreService.streamRequest(requestId).listen((request) {
       _activeRequest = request;
       notifyListeners();
     });
   }
 
-  /// Stop watching active request.
   void stopWatching() {
     _activeRequestSub?.cancel();
     _activeRequest = null;
     notifyListeners();
   }
 
-  /// Accept a donor match (called by donor).
   Future<void> acceptMatch(String requestId, String donorId) async {
     try {
       await _firestoreService.updateRequest(requestId, {
@@ -90,6 +80,32 @@ class RequestProvider extends ChangeNotifier {
       _error = 'Failed to accept match: $e';
       notifyListeners();
     }
+  }
+
+  Future<void> cancelActiveRequest() async {
+    final request = _activeRequest;
+    if (request == null) return;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _firestoreService.updateRequest(request.id, {
+        'status': 'cancelled',
+      });
+      _activeRequest = request.copyWith(status: 'cancelled');
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = 'Failed to cancel request: $e';
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
   }
 
   @override

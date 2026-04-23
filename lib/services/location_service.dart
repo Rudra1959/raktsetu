@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class LocationService {
   /// Check and request location permissions.
   Future<bool> checkPermissions() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return false;
 
     LocationPermission permission = await Geolocator.checkPermission();

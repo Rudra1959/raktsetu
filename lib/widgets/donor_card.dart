@@ -32,7 +32,7 @@ class DonorCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: RaktSetuTheme.primaryRed.withOpacity(0.1),
+                backgroundColor: RaktSetuTheme.primaryRed.withValues(alpha: 0.1),
                 child: const Icon(Icons.person, color: RaktSetuTheme.primaryRed),
               ),
               const SizedBox(width: 12),
@@ -42,16 +42,16 @@ class DonorCard extends StatelessWidget {
                   children: [
                     Text(name, style: GoogleFonts.inter(
                       fontSize: 15, fontWeight: FontWeight.w600,
-                    )),
+                    ),),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Icon(Icons.location_on, size: 14,
-                            color: Colors.grey.shade500),
+                            color: Colors.grey.shade500,),
                         const SizedBox(width: 2),
                         Text(distance, style: TextStyle(
                           fontSize: 13, color: Colors.grey.shade600,
-                        )),
+                        ),),
                       ],
                     ),
                   ],

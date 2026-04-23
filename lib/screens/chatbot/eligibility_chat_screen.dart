@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../config/theme.dart';
 import '../../services/gemini_service.dart';
 
@@ -15,95 +17,152 @@ class _EligibilityChatScreenState extends State<EligibilityChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
-  String _selectedLang = 'en';
   bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
     _messages.add(_ChatMessage(
-      text: 'Hi! I\'m RaktSetu AI. Ask me anything about blood donation eligibility. I support 12 Indian languages! 🩸',
+      text: 'Greetings. I am RaktSetu AI. I can analyze your biometric eligibility protocols for blood donation across 12 linguistic grids. How may I assist?',
       isBot: true,
-    ));
+    ),);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Eligibility Check'),
-        actions: [
-          // Language picker
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.language),
-            onSelected: (lang) => setState(() => _selectedLang = lang),
-            itemBuilder: (_) => GeminiService.supportedLanguages.entries
-                .map((e) => PopupMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ))
-                .toList(),
+      backgroundColor: RaktSetuTheme.paper,
+      body: Stack(
+        children: [
+          // Background Animation
+          Positioned(top: -100, right: -100, child: _AnimatedOrb(color: RaktSetuTheme.primaryRed.withValues(alpha: 0.05), size: 400)),
+          Positioned(bottom: -150, left: -100, child: _AnimatedOrb(color: RaktSetuTheme.infoBlue.withValues(alpha: 0.04), size: 500)),
+          Positioned.fill(child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100), child: Container(color: Colors.transparent))),
+
+          Column(
+            children: [
+              _buildAppBar(context),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _messages.length + (_isTyping ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length) return _TypingIndicator().animate().fadeIn();
+                    return _ChatBubble(message: _messages[index]);
+                  },
+                ),
+              ),
+              _buildInputArea(context),
+            ],
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Chat messages
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length) {
-                  return _TypingIndicator();
-                }
-                return _ChatBubble(message: _messages[index]);
-              },
-            ),
-          ),
+    );
+  }
 
-          // Input area
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 8, 16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade200),
+  Widget _buildAppBar(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, bottom: 20, left: 20, right: 20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        border: Border(bottom: BorderSide(color: RaktSetuTheme.divider.withValues(alpha: 0.5))),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: RaktSetuTheme.ink, size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'AI CO-PILOT', 
+                style: GoogleFonts.manrope(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 2, color: RaktSetuTheme.textSoft),
+              ),
+              Text(
+                'Eligibility Protocol', 
+                style: GoogleFonts.manrope(fontWeight: FontWeight.w900, fontSize: 18, color: RaktSetuTheme.ink, letterSpacing: -0.5),
+              ),
+            ],
+          ),
+          const Spacer(),
+          _buildLanguagePicker(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguagePicker() {
+    return Container(
+      decoration: BoxDecoration(
+        color: RaktSetuTheme.ink,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: PopupMenuButton<String>(
+        offset: const Offset(0, 50),
+        icon: const Icon(Icons.language_rounded, color: Colors.white, size: 20),
+        onSelected: (lang) => setState(() {}),
+        itemBuilder: (_) => GeminiService.supportedLanguages.entries
+            .map((e) => PopupMenuItem(
+                  value: e.key,
+                  child: Text(e.value, style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
+                ),)
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildInputArea(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom + 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 40, offset: const Offset(0, -10))],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: RaktSetuTheme.paper,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: _messageController,
+                style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: RaktSetuTheme.ink),
+                decoration: InputDecoration(
+                  hintText: 'Ask about eligibility...',
+                  hintStyle: GoogleFonts.manrope(color: RaktSetuTheme.textSoft.withValues(alpha: 0.5), fontWeight: FontWeight.w700),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                ),
+                onSubmitted: (_) => _sendMessage(),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Ask about eligibility...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
-                    maxLines: null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: _sendMessage,
-                  icon: const Icon(Icons.send),
-                  style: IconButton.styleFrom(
-                    backgroundColor: RaktSetuTheme.primaryRed,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
           ),
+          const SizedBox(width: 16),
+          _buildSendButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSendButton() {
+    return GestureDetector(
+      onTap: _sendMessage,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: RaktSetuTheme.ink,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: RaktSetuTheme.ink.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
+        ),
+        child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
       ),
     );
   }
@@ -119,15 +178,14 @@ class _EligibilityChatScreenState extends State<EligibilityChatScreen> {
     });
     _scrollToBottom();
 
-    // Simulate AI response (in production, calls GeminiService)
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         setState(() {
           _isTyping = false;
           _messages.add(_ChatMessage(
-            text: 'Thank you for your question! In general, you can donate blood if you are 18-65 years old, weigh at least 45kg, and have hemoglobin above 12.5 g/dL. For specific conditions, please consult your doctor.',
+            text: 'Analysis complete. Based on standard health protocols, criteria include age 18-65, weight >45kg, and Hb >12.5 g/dL. Would you like to check a specific medical history parameter?',
             isBot: true,
-          ));
+          ),);
         });
         _scrollToBottom();
       }
@@ -139,8 +197,8 @@ class _EligibilityChatScreenState extends State<EligibilityChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
         );
       }
     });
@@ -169,32 +227,32 @@ class _ChatBubble extends StatelessWidget {
     return Align(
       alignment: message.isBot ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(14),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: message.isBot
-              ? Colors.grey.shade100
-              : RaktSetuTheme.primaryRed,
+          color: message.isBot ? Colors.white : RaktSetuTheme.ink,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(message.isBot ? 4 : 16),
-            bottomRight: Radius.circular(message.isBot ? 16 : 4),
+            topLeft: const Radius.circular(24),
+            topRight: const Radius.circular(24),
+            bottomLeft: Radius.circular(message.isBot ? 4 : 24),
+            bottomRight: Radius.circular(message.isBot ? 24 : 4),
           ),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: message.isBot ? 0.04 : 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+          ],
         ),
         child: Text(
           message.text,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: message.isBot ? Colors.black87 : Colors.white,
-            height: 1.4,
+          style: GoogleFonts.manrope(
+            fontSize: 15,
+            color: message.isBot ? RaktSetuTheme.ink : Colors.white,
+            fontWeight: message.isBot ? FontWeight.w700 : FontWeight.w600,
+            height: 1.5,
           ),
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
 }
 
@@ -204,23 +262,19 @@ class _TypingIndicator extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {
             return Container(
-              width: 8,
-              height: 8,
+              width: 6, height: 6,
               margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade400,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: RaktSetuTheme.primaryRed.withValues(alpha: 0.3), shape: BoxShape.circle),
             );
           }),
         ),
@@ -228,3 +282,37 @@ class _TypingIndicator extends StatelessWidget {
     );
   }
 }
+
+class _AnimatedOrb extends StatefulWidget {
+  final Color color;
+  final double size;
+  const _AnimatedOrb({required this.color, required this.size});
+
+  @override
+  State<_AnimatedOrb> createState() => _AnimatedOrbState();
+}
+
+class _AnimatedOrbState extends State<_AnimatedOrb> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 15))..repeat();
+  }
+  @override
+  void dispose() { _controller.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => Transform.rotate(
+        angle: _controller.value * 2 * 3.14,
+        child: Container(
+          width: widget.size, height: widget.size * 1.1,
+          decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [widget.color, Colors.transparent])),
+        ),
+      ),
+    );
+  }
+}
+

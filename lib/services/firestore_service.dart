@@ -154,7 +154,7 @@ class FirestoreService {
         .limit(50)
         .snapshots()
         .map((snap) =>
-            snap.docs.map(NotificationModel.fromFirestore).toList());
+            snap.docs.map(NotificationModel.fromFirestore).toList(),);
   }
 
   /// Mark notification as read.

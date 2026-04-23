@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// ... other imports remain exactly the same
 import 'package:provider/provider.dart';
-import 'config/firebase_options.dart';
+import 'firebase_options.dart';
 import 'app.dart';
 import 'providers/auth_provider.dart';
 import 'providers/request_provider.dart';
@@ -17,6 +22,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Connect to local emulators in debug mode
+  if (kDebugMode) {
+    try {
+      final String host = defaultTargetPlatform == TargetPlatform.android ? '10.0.2.2' : 'localhost';
+      await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+      FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+      print('Connected to Firebase Emulators ($host)');
+    } catch (e) {
+      print('Failed to setup emulators: $e');
+    }
+  }
 
   runApp(
     MultiProvider(

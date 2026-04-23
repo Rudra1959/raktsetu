@@ -395,8 +395,8 @@ Add your Google Maps API key to `android/app/src/main/AndroidManifest.xml`:
 firebase emulators:start
 
 # Run Flutter app
-flutter run
 
+flutter run
 # Deploy to Firebase
 firebase deploy
 ```
